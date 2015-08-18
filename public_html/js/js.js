@@ -23,18 +23,14 @@
             mapContainer.show();
             var latitude = position.coords.latitude;
             var longitude = position.coords.longitude;
-
             paragraph.addClass('success');
             paragraph.html('Latitude: ' + latitude + ', ' + 'Longitude: ' + longitude);
-
             var googlePosition = new google.maps.LatLng(latitude, longitude);
-
             var map = new google.maps.Map(mapContainer[0], {
                 center: googlePosition,
                 zoom: 20,
                 mapTypeId: google.maps.MapTypeId.HYBRID
             });
-
             var marker = new google.maps.Marker({
                 map: map,
                 position: googlePosition,
@@ -42,7 +38,6 @@
                 draggable: true,
                 animation: google.maps.Animation.DROP
             });
-
             var geoCoder = new google.maps.Geocoder();
             geoCoder.geocode({
                 'latLng': googlePosition
@@ -53,6 +48,27 @@
                             content: result[1].formatted_address,
                             position: googlePosition
                         });
+
+                        $.ajax({
+                            method: "POST",
+                            url: 'js/data/location.php',
+                            data: {
+                                lat: latitude,
+                                long: longitude,
+                                address: result[1].address_components[0].long_name,
+                                city: result[1].address_components[1].long_name
+                            },
+                            dataType: 'html'
+                        })
+                                .done(function (data) {
+                                    console.log(data);
+                                })
+                                .fail(function (jqXHR, status, error) {
+                                    console.log(status, error);
+                                })
+                                .always(function () {
+                                    console.log('Complete!');
+                                });
                         google.maps.event.addListener(marker, 'click', function () {
                             popUp.open(map);
                         });
@@ -64,7 +80,6 @@
                 }
             });
         }
-
         function errorLocation(error) {
             paragraph.addClass('error');
             switch (error.code) {
