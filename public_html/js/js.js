@@ -1,3 +1,5 @@
+/* global google */
+
 (function () {
     'use strict';
     $(document).ready(function () {
@@ -5,7 +7,8 @@
         var mapContainer = $('#map');
         var options = {};
         mapContainer.hide();
-        function checkGeolocation() {
+        
+        function checkExistGeolocation() {
             if (!navigator.geolocation) {
                 paragraph.addClass('error');
                 paragraph.html('Geolocation is not support by your browser! Sorry!');
@@ -13,32 +16,42 @@
             else {
                 options = {
                     enableHighAccuracy: true,
-                    timeout: Infinity,
                     maximumAge: 0
                 };
             }
         }
 
-        function successLocation(position) {
-            mapContainer.show();
-            var latitude = position.coords.latitude;
-            var longitude = position.coords.longitude;
-            paragraph.addClass('success');
-            paragraph.html('Latitude: ' + latitude + ', ' + 'Longitude: ' + longitude);
-            var googlePosition = new google.maps.LatLng(latitude, longitude);
+        function createMap(latitude, longitude) {
             var map = new google.maps.Map(mapContainer[0], {
-                center: googlePosition,
+                center: new google.maps.LatLng(latitude, longitude),
                 zoom: 20,
                 mapTypeId: google.maps.MapTypeId.HYBRID
             });
+            return map;
+        }
+
+        function createMarker(latitude, longitude) {
             var marker = new google.maps.Marker({
-                map: map,
-                position: googlePosition,
+                map: createMap(latitude, longitude),
+                position: new google.maps.LatLng(latitude, longitude),
                 title: 'Hi , I am here',
                 draggable: true,
                 animation: google.maps.Animation.DROP
             });
+            return marker;
+        }
+
+        function successLocation(position) {
+            var latitude = position.coords.latitude;
+            var longitude = position.coords.longitude;
+            var googlePosition = new google.maps.LatLng(latitude, longitude);
             var geoCoder = new google.maps.Geocoder();
+
+            mapContainer.show();
+
+            paragraph.addClass('success');
+            paragraph.html('Latitude: ' + latitude + ', ' + 'Longitude: ' + longitude);
+
             geoCoder.geocode({
                 'latLng': googlePosition
             }, function (result, status) {
@@ -69,8 +82,8 @@
                                 .always(function () {
                                     console.log('Complete!');
                                 });
-                        google.maps.event.addListener(marker, 'click', function () {
-                            popUp.open(map);
+                        google.maps.event.addListener(createMarker(latitude, longitude), 'click', function () {
+                            popUp.open(createMap(latitude, longitude));
                         });
                     } else {
                         alert('No results found');
@@ -99,7 +112,7 @@
         }
 
         $('#button-position').click(function () {
-            checkGeolocation();
+            checkExistGeolocation();
             navigator.geolocation.getCurrentPosition(successLocation, errorLocation, options);
             $('#button-position, #header').fadeOut();
         }
